@@ -1,0 +1,125 @@
+﻿@model StudentExamsViewModel
+@{
+    ViewData["Title"] = "E-Exam | Exams";
+}
+
+<h1>Upcoming Exams</h1>
+<table class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Exam Name</th>
+            <th>Date</th>
+            <th>Availability</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.CommingExams.Count() > 0)
+            @foreach (Exam commingExam in Model.CommingExams)
+            {
+
+                <tr class="examRow">
+                    <td>@commingExam.Course.Name | @commingExam.Title | @commingExam.TotalGrade</td>
+                    <td class="datestr">@commingExam.ExamDate</td>
+                    <td>
+                        <a class="btn success takeBtn" asp-action="TakeExam" asp-controller="Student" asp-route-examId="@commingExam.Id">Take Exam</a>
+                    </td>
+                    @* <td>
+                        @if (commingExam.ExamDate <= DateTime.Now)
+                        {
+                            <a asp-action="TakeExam" asp-controller="Student" asp-route-examId="@commingExam.Id">Take Exam</a>
+                        }
+                        else
+                        {
+                            <span class="not-available">Not available</span>
+                        }
+                    </td> *@
+                </tr>
+            }
+        else
+        {
+            <tr>
+                <td colspan="3">No Upcomming Exams </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<h1>Passed Exams</h1>
+<table class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Exam Name</th>
+            <th>Date</th>
+            <th>Grades</th>
+            <th>Answers</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.ExamsTaken.Count() > 0)
+            foreach (var examTaken in Model.ExamsTaken)
+            {
+                <tr>
+                    <td>@examTaken.Exam.Course.Name | @examTaken.Exam.Title</td>
+                    <td>@examTaken.Exam.ExamDate</td>
+                    <td>@examTaken.Grade/@examTaken.Exam.TotalGrade</td>
+                    <td>
+                        <a class="btn info" asp-action="Answers" asp-controller="Student" asp-route-stId="@examTaken.StudentId" asp-route-examId="@examTaken.ExamId">Answers</a>
+                    </td>
+                </tr>
+            }
+        else
+        {
+            <tr>
+                <td colspan="4">No Exams Taken Yet </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<h1>Missed Exams</h1>
+<table class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Exam Name</th>
+            <th>Date</th>
+            <th>Grades</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.MissedExams.Count() > 0)
+            foreach (var missedExam in Model.MissedExams)
+            {
+                <tr>
+                    <td>@missedExam.Course.Name | @missedExam.Title</td>
+                    <td>@missedExam.ExamDate</td>
+                    <td>0/@missedExam.TotalGrade</td>
+                </tr>
+            }
+        else
+        {
+            <tr>
+                <td colspan="3">No Missed Exams </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script>
+    $(function () {
+        function UpdateBtnsState() {
+            let rows = $(".examRow");
+            rows.each((i, item) => {
+                let examDateString = item.querySelector('.datestr').textContent;
+                let examDate = new Date(examDateString);
+                let btn = item.querySelector('.takeBtn');
+                if (examDate > new Date()) {
+                    btn.classList.add("disabled");
+                }
+                else {
+                    btn.classList.remove("disabled");
+                }
+            });
+        }
+        UpdateBtnsState();
+        setInterval(() => UpdateBtnsState(), 10000);
+    });
+</script>
+

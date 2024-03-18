@@ -1,0 +1,110 @@
+﻿@model ExamViewModel
+@{
+    
+    ViewData["Title"] = $"{@Model.DepartmentCourse.Course.Name} Exam";
+
+    List<Question> mcqQuestions = Model.Exam.Questions.Where(e => e.Type == QType.MCQ).ToList();
+    List<Question> tfQuestions = Model.Exam.Questions.Where(e => e.Type == QType.TrueFalse).ToList();
+}
+
+
+    <div class="text">
+        <h2 data-text="Exam">Exam</h2>
+    </div>
+    <table class="table table-striped table-bordered">
+            <tr>
+                <th>Department</th>
+                <th>Course Name</th>
+                <th>Instructor Name</th>
+                <th>Total Grade</th>
+                <th>Duration</th>
+                <th>Timer</th>
+            </tr>
+                <tr>
+                    <td>@Model.DepartmentCourse.Department.Name</td>
+                    <td>@Model.DepartmentCourse.Course.Name</td>
+                    <td>@Model.DepartmentCourse.Instructor.Name</td>
+                    <td>@Model.Exam.TotalGrade</td>
+                    <td>@Model.Exam.DurationInMinutes Minutes</td>
+                    <td><span id="timer">00:00:00</span></td>
+                </tr>
+            
+        </table>
+        <h1>Answer the Questions</h1>
+        <form id="examForm" method="post" asp-controller="Student" asp-action="SubmitExam">
+            @if (mcqQuestions.Count > 0)
+            {
+                <h5>T/F Questions:</h5>
+                @for (int i = 0; i < tfQuestions.Count; i++)
+                {
+                    <h5>@(i + 1). @tfQuestions[i].Text</h5>
+                    foreach (var choice in tfQuestions[i].Choices)
+                    {
+                        <div class="align-content-center" >
+                            <input type="radio" id="@choice.Id" name="tfChoices[@i].Id" value="@choice.Id" />
+                            <label for="@choice.Id">@choice.Text </label>
+                        </div>
+                        <br />
+                    }
+                    <br />
+                    <hr />
+                }
+            }
+            @if (mcqQuestions.Count > 0)
+            {
+                <h5>MCQ Questions:</h5>
+                @for (int i = 0; i < mcqQuestions.Count; i++)
+                {
+                    <h5>@(i + 1). @mcqQuestions[i].Text</h5>
+                    foreach(var choice in mcqQuestions[i].Choices)
+                    {
+                        <input type="checkbox" id="@choice.Id" value="@choice.Id" />
+                        <label for="@choice.Id">@choice.Text </label>
+                        <br />
+                    }
+                    <br />
+                    <hr />
+                }
+            }
+            <input type="hidden" name="examId" value="@Model.Exam.Id" />
+            <div class="error-message"></div>
+            <button class="btn success" id="submitBtn" type="submit">Submit Exam</button>
+        </form>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        $("#examForm").submit((e) => {
+            $("input[type=checkbox]:checked").each((index, input) => {
+                input.name = `mcqChoices[${index}].Id`;
+            })
+        })
+    $(function () {
+        const startTime = new Date("@Model.Exam.ExamDate");
+        const endTime = new Date(startTime.getTime() + @Model.Exam.DurationInMinutes * 60000);
+
+        // method to update timer
+        function updateTimer() {
+            const currentTime = new Date();
+            const timeDifference = endTime - currentTime;
+
+            if (timeDifference <= 0) {
+                clearInterval(timerInterval);
+                $('#submitBtn').click();
+            } else {
+                const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+                const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+
+                $("#timer").text(`${padTime(hours)}:${padTime(minutes)}:${padTime(seconds)}`);
+            }
+        }
+        // method to add zero to single-digit numbers
+        function padTime(time) {
+            return time < 10 ? "0" + time : time;
+        }
+        updateTimer();
+        // Update the timer every second
+        const timerInterval = setInterval(updateTimer, 1000);
+    });
+    </script>
